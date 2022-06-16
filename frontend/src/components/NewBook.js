@@ -52,6 +52,7 @@ const NewBook = () => {
 
   return (
     <div className="m-3">
+      <p>Only logged-in user is allowed to add new book!</p>
       <Form onSubmit={submit}>
         <Form.Group className="mb-3">
           <Form.Label>Title</Form.Label>

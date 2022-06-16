@@ -3,14 +3,28 @@ import { useState, useEffect } from 'react'
 import { Table, Button, Form, Row } from 'react-bootstrap'
 import { ALL_AUTHORS } from '../graphql/queries'
 import { EDIT_AUTHORS } from '../graphql/mutations'
+import Notification from './Notification'
 
 const Authors = () => {
   const [ name, setName ] = useState(null)
   const [ year, setYear ] = useState('')
   const [ authors, setAuthors ] = useState([])
+  const [notification, setNotification] = useState(null)
   const result = useQuery(ALL_AUTHORS)
   const [ editResult ] = useMutation(EDIT_AUTHORS, {
-    refetchQueries: [ { query: ALL_AUTHORS } ]
+    refetchQueries: [ { query: ALL_AUTHORS } ],
+    onError: (errors) => {
+      setNotification({
+        message: errors.graphQLErrors[0].message,
+        error: true
+      })
+    },
+    onCompleted: () => {
+      setNotification({
+        message: `Edited author ${name} successfully!`,
+        error: false
+      })
+    }
   })
 
   useEffect(() => {
@@ -38,8 +52,9 @@ const Authors = () => {
   }
 
   return (
-    <div className="p-2">
+    <div className="m-3">
       <h2>Authors</h2>
+
       <Table striped bordered hover className="table-style">
         <thead>
           <tr>
@@ -59,33 +74,38 @@ const Authors = () => {
         </tbody>
       </Table>
       <h2>Set birthyear</h2>
-      <div>
-        {name
-          ? <Form onSubmit={setBirthYear} className="ms-2">
-            <Form.Group as={Row}>
-              <Form.Select className="w-50">
-                {authors.map((a) =>
-                  (<option value={a.name} key={a.name}>{a.name}</option>))
-                }
-              </Form.Select>
-              <p className="ms-0 pt-3">borns in</p>
-              <Form.Control
-                value={year}
-                type="number"
-                onChange={({ target }) => setYear(target.value)}
-                className="w-25"
-              />
-              <Button
-                type="submit"
-                variant="outline-primary"
-                className="m-1 p-2 ms-1 w-25">
-                Update author
-              </Button>
-            </Form.Group>
-          </Form>
-          : null
-        }
-      </div>
+      <p>Only logged-in user is allowed to edit!</p>
+      {name
+        ? <Form value={name ? name : 'Select author'} onSubmit={setBirthYear}>
+          <Form.Group as={Row} className="ms-1 mb-2">
+            <Form.Select className="w-50" onChange={({ target }) => setName(target.value)}>
+              {authors.map((a) =>
+                (<option value={a.name} key={a.name}>{a.name}</option>))
+              }
+            </Form.Select>
+            <p className="ms-0 pt-3">borns in</p>
+            <Form.Control
+              value={year}
+              type="number"
+              onChange={({ target }) => setYear(target.value)}
+              className="w-25"
+            />
+            <Button
+              type="submit"
+              variant="outline-primary"
+              className="my-2 p-2 ms-1 w-25">
+              Update author
+            </Button>
+          </Form.Group>
+          {notification
+            ? <Notification
+              message={notification.message}
+              error={notification.error}
+            />
+            : null}
+        </Form>
+        : null
+      }
     </div>
   )
 }
