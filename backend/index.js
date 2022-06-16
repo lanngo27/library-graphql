@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
+const path = require("path")
 require('dotenv').config()
 
 const { ApolloServer } = require('apollo-server-express')
@@ -32,6 +33,13 @@ const start = async () => {
   const app = express()
   const httpServer = http.createServer(app)
   app.use(express.static('frontend/build'))
+  app.get('/*', function(req, res) {
+    res.sendFile(path.join(__dirname, '../frontend/build/index.html'), function(err) {
+      if (err) {
+        res.status(500).send(err)
+      }
+    })
+  })
 
   const schema = makeExecutableSchema({ typeDefs, resolvers })
 
